@@ -1,0 +1,71 @@
+<!-- 
+  Kaskada reguł detekcyjnych — Execution Anomaly
+  Wdrożone w odpowiedzi na 8-minutową lukę w widoczności wykrytą w Lab 1.
+  Plik: /var/ossec/etc/rules/local_rules.xml na SOC-WAZUH-01
+-->
+
+<group name="sysmon, execution_anomaly,">
+
+  <!-- 
+    100510: Bramka wejściowa (level 0, cicha)
+    Taguje zdarzenia Sysmon EID 1 gdzie interpreter poleceń uruchamia exe 
+    spoza standardowych katalogów. Nie generuje alertu — karmiony regułami potomnymi.
+  -->
+  <rule id="100510" level="0">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)(powershell|pwsh|cmd|wscript|cscript|mshta|wmic)\.exe$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)^C:\\\\(?!Program Files|Windows|ProgramData\\\\Microsoft).*\.exe$</field>
+    <description>Sysmon - Stage1: Interpreter spawned executable from writable path</description>
+    <options>no_log</options>
+    <group>stage1_writable_exec</group>
+  </rule>
+
+  <!--
+    100511: Główna detekcja (level 11)
+    Alert gdy exe nie jest na whiteliście znanych aplikacji.
+    Tuning: dopisuj nazwy procesów do negate regex.
+  -->
+  <rule id="100511" level="11">
+    <if_sid>100510</if_sid>
+    <field name="win.eventdata.image" negate="yes" type="pcre2">(?i)\\(chrome_updater|msedgeupdate|googleupdate|onedrive|teams|teamsupdate|officec2rclient|code|slack|zoom|zoominstaller)\.exe$</field>
+    <description>HIGH — Unknown executable launched from writable path by interpreter. Process: $(win.eventdata.image) | Parent: $(win.eventdata.parentImage) | User: $(win.eventdata.user)</description>
+    <mitre>
+      <id>T1059.001</id>
+      <id>T1204.002</id>
+    </mitre>
+    <options>no_full_log</options>
+    <group>execution_anomaly,writable_path_exec</group>
+  </rule>
+
+  <!--
+    100512: Masquerading (level 12, najwyższy priorytet)
+    Łapie gdy exe w writable path ma nazwę procesu systemowego.
+    Prawdziwy svchost/lsass/csrss nigdy nie siedzi poza System32.
+  -->
+  <rule id="100512" level="12">
+    <if_sid>100510</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\\\(svchost|lsass|csrss|services|smss|wininit|winlogon|spoolsv|taskhost|conhost|dllhost|sihost)\.exe$</field>
+    <description>HIGH — Possible masquerading: System process name found in writable path. Process: $(win.eventdata.image) | Parent: $(win.eventdata.parentImage) | User: $(win.eventdata.user)</description>
+    <mitre>
+      <id>T1036</id>
+      <id>T1036.003</id>
+    </mitre>
+    <group>masquerading,writable_path_exec</group>
+  </rule>
+
+  <!--
+    100513: Egzekucja z niestandardowego katalogu root (level 10)
+    Siatka bezpieczeństwa — łapie exe z C:\tools, C:\temp, C:\c2 itp.
+  -->
+  <rule id="100513" level="10">
+    <if_sid>100510</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)^C:\\[^\\]+\\[^\\]+\.exe$</field>
+    <field name="win.eventdata.image" negate="yes" type="pcre2">(?i)^C:\\(Users|Program Files|Program Files \(x86\)|Windows|ProgramData)\\</field>
+    <description>SUSPICIOUS — Executable launched from non-standard root directory. Process: $(win.eventdata.image) | Parent: $(win.eventdata.parentImage) | User: $(win.eventdata.user)</description>
+    <mitre>
+      <id>T1204.002</id>
+    </mitre>
+    <group>execution_anomaly,nonstandard_dir</group>
+  </rule>
+
+</group>
