@@ -82,15 +82,21 @@ The main deliverable from Lab 1 — a cascade of Wazuh rules that close the visi
 ## Repository Structure
 
 ```
-├── README.md                              # You are here
-├── docs/
-│   ├── lab-01-c2-sliver.md                # Lab 1 — full writeup
-│   └── infrastructure.md                  # Environment setup details
-├── detection-rules/
-│   └── wazuh/
-│       ├── execution-cascade.xml          # Rules 100510-100513
-│       └── README.md                      # Rule logic explanation
-├── reports/
-│   └── lab-01-incident-report.pdf         # SOC incident report
-└── screenshots/
+synkrousis-labs/
+├── README.md
+├── lab-001-c2-sliver/
+│   ├── writeup.md
+│   ├── detection-rules/
+│   │   └── execution-cascade.xml
+│   ├── report/
+│   │   └── incident-report.pdf
+│   └── screenshots/
+├── lab-002-credential-access-wmi/
+│   ├── writeup.md
+│   ├── detection-rules/
+│   └── screenshots/
+├── lab-003-.../
+│   └── ...
+└── infrastructure/
+    └── README.md 
 ```
