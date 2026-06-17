@@ -44,6 +44,8 @@ Target account: `AdminLokalny` — local account, member of Administrators.
 | T+26s         | Special privileges assigned to logon | 67028         | 4672         |
 | T+26s         | **Correlation: brute-force success** | **100600**    | —            |
 
+![Wazuh alert sequence](screenshots/01-wazuh-alert-sequence.png)
+
 All authentication events carried `logonType 3` (network) and
 `authenticationPackageName NTLM`, consistent with a remote RDP logon driven by
 an external tool rather than interactive console access.
@@ -85,3 +87,6 @@ follow-on activity (credential theft, lateral movement).
 
 - Rule: [`detection-rules/01-rdp-bruteforce.xml`](../detection-rules/01-rdp-bruteforce.xml)
 - Attack reproduction: [`attacks/01-rdp-bruteforce.md`](../attacks/01-rdp-bruteforce.md)
+
+
+![Hydra brute-force success](screenshots/01-hydra-bruteforce-success.png)
