@@ -1,0 +1,13 @@
+<group name="rdp_bruteforce,attack,">
+
+  <rule id="100600" level="14" frequency="3" timeframe="120">
+    <if_matched_sid>60122</if_matched_sid>
+    <if_sid>92657</if_sid>
+    <description>RDP brute-force SUCCESS: successful logon (4624) after multiple failures (4625)</description>
+    <mitre>
+      <id>T1110.001</id>
+      <id>T1078</id>
+    </mitre>
+  </rule>
+
+</group>
