@@ -7,7 +7,6 @@
 | **Tactic** | Credential Access ([TA0006](https://attack.mitre.org/tactics/TA0006/)) |
 | **Environment** | [`00-environment`](../../00-environment/) |
 
-> [TODO: confirm the actual folder number for this module in the repo — the repo screenshot only showed `00-environment` and `03-command-and-control`, so the Credential Access number needs to be matched manually when placing this file]
 
 ## Summary
 
@@ -61,7 +60,6 @@ Source: Windows Security Event Log on SOC-DC01, forwarded by the Wazuh agent.
 | Target accounts | spray1, spray2, spray3, spray4, spray5 (5 distinct) |
 | Time window | 05:36:45.622 – 05:36:45.708 (5 attempts in < 100 ms) |
 
-[TODO: paste raw Wazuh JSON alert for one of the 4625 events]
 
 The time window speaks for itself — that's not a human login cadence, it's an automated burst. Without correlation these 5 events look like 5 separate, unrelated failed logons.
 
