@@ -18,7 +18,6 @@ Built and opened a LibreOffice Writer document with a macro set to auto-run on o
 | Attacker / Victim | [TODO: hostname alias per 00-environment] | 10.10.10.150 | Windows host, LibreOffice installed, macro security set to Low. Same machine authored and opened the file. |
 | Monitoring | Wazuh manager | - | Ingests the Sysmon Operational channel (Event ID 1, Process Creation) forwarded from 10.10.10.150. LibreOffice has no native macro-execution logging, so all visibility comes from Sysmon process-creation telemetry. |
 
-Single-host lab: the file was authored and opened on the same machine. No separate attacker host, no delivery vector. The goal was to test detection of macro-based execution in isolation, not a full delivery chain. Full topology and host provisioning: [00-environment](../../00-environment/).
 
 ## Red Team
 
@@ -48,7 +47,7 @@ Opening `Hacked.odt` triggered the macro automatically (per the Low macro securi
 
 Execution time: `14:46:20.841 UTC` (Sysmon `utcTime` of the first process-creation event; see Telemetry).
 
-Evidence: [TODO: evidence/<screenshot filename>.png - calc.exe running / process tree]
+
 
 ## Telemetry and Observation
 
@@ -109,7 +108,6 @@ False-positive risk: on a clean single-user host like this lab, effectively zero
 
 MITRE: T1204.002 (User Execution: Malicious File) for the macro-open origin, plus T1059 (Command and Scripting Interpreter) at the parent level because the child can be any of several interpreters, not just PowerShell.
 
-Rule lives in [`rules/`](rules/). [TODO: confirm the two base rule IDs (level 3 and 4) from the alert output to fill the table above.]
 
 ## Analysis and IR
 
@@ -136,24 +134,15 @@ Payload assessment from the command lines: the final action is only `Start-Proce
 
 ## Conclusions and Gotchas
 
-Visibility boundary. Sysmon EID 1 is the only reason any of this is visible. LibreOffice logs nothing about the macro firing, so without command-line process auditing (Sysmon, or Windows 4688 with command-line auditing enabled) the entire chain is invisible. Everything in triage was reconstructed from process-creation telemetry, not from any application log.
-
-The signal is structural, not the file and not the payload. An `.odt` is not inherently malicious, and the payload here is a calculator. What makes this detectable is the parent-child anomaly: an office binary spawning a shell or LOLBin. That is what rule 105000 keys on, and it is why the rule ignores `commandLine` content entirely.
-
 The base rules fired but missed it, and that is the core finding. The out-of-the-box Sysmon rules logged the process starts at level 3 and 4 with no notion that an office app spawning `cmd.exe` is worth a second look. Severity alone would have buried this in noise. A detection that keys on the relationship, not the individual process, is what closes the gap.
 
-Pattern versus content is a deliberate tradeoff. 105000 is a broad structural tripwire at level 8: it catches the technique early but cannot tell an inert `calc.exe` from a weaponized encoded payload. That separation is intentional, structure trips the alert, payload severity is decided in triage or by a stacked content-aware rule. It is worth being explicit that this rule would fire identically whether the macro launched a calculator or ransomware.
 
 Macro security Low did a lot of work. It removed the "Enable Macros" gate, so the macro ran on open with no interaction. Default Medium changes the scenario: the user has to click through a prompt, and a Low setting on a real endpoint is itself a hardening finding worth its own detection.
 
 LibreOffice Basic is not VBA, and it matters for hunting. The artifacts differ from a Microsoft Office maldoc: the parent process is `soffice.bin` / `swriter.exe`, not `winword.exe`. A rule or hunt that only lists Microsoft Office binaries misses this entirely, which is why the 105000 regex includes the LibreOffice binaries alongside the Office ones.
-
-Negative indicators are part of the verdict. No obfuscation, no network fetch, no PowerShell hidden-window flag. Calling out what is absent is how "technique confirmed" gets separated from "payload severity", and it is the kind of detail that keeps a triage honest rather than assuming the worst or dismissing it.
 
 ## References
 
 - MITRE ATT&CK, T1204.002 User Execution: Malicious File
 - MITRE ATT&CK, T1059.001 Command and Scripting Interpreter: PowerShell
 - MITRE ATT&CK, T1059.003 Command and Scripting Interpreter: Windows Command Shell
-- Sysmon Event ID 1 (Process Creation) documentation
-- [TODO: Atomic Red Team T1204.002 test reference if you used one]
